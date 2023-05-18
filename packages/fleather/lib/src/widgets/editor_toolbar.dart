@@ -358,8 +358,13 @@ Widget defaultToggleStyleButtonBuilder(
 class SelectHeadingStyleButton extends StatefulWidget {
   final FleatherController controller;
 
-  const SelectHeadingStyleButton({Key? key, required this.controller})
-      : super(key: key);
+  final List<HeadingStyle> headingStyles;
+
+  const SelectHeadingStyleButton({
+    Key? key,
+    required this.controller,
+    required this.headingStyles,
+  }) : super(key: key);
 
   @override
   State<SelectHeadingStyleButton> createState() =>
@@ -409,12 +414,23 @@ class _SelectHeadingStyleButtonState extends State<SelectHeadingStyleButton> {
 
   @override
   Widget build(BuildContext context) {
-    return _selectHeadingStyleButtonBuilder(context, _value, _selectAttribute);
+    return _selectHeadingStyleButtonBuilder(
+      context,
+      _value,
+      widget.headingStyles
+          .map((style) => style.toParchmentAttribute())
+          .toList(),
+      _selectAttribute,
+    );
   }
 }
 
-Widget _selectHeadingStyleButtonBuilder(BuildContext context,
-    ParchmentAttribute? value, ValueChanged<ParchmentAttribute?> onSelected) {
+Widget _selectHeadingStyleButtonBuilder(
+  BuildContext context,
+  ParchmentAttribute? value,
+  List<ParchmentAttribute> values,
+  ValueChanged<ParchmentAttribute?> onSelected,
+) {
   const style = TextStyle(fontSize: 12);
 
   final valueToText = {
@@ -429,32 +445,13 @@ Widget _selectHeadingStyleButtonBuilder(BuildContext context,
     hoverElevation: 0,
     height: 32,
     initialValue: value,
-    items: [
-      PopupMenuItem(
-        value: ParchmentAttribute.heading.unset,
-        height: 32,
-        child:
-            Text(valueToText[ParchmentAttribute.heading.unset]!, style: style),
-      ),
-      PopupMenuItem(
-        value: ParchmentAttribute.heading.level1,
-        height: 32,
-        child:
-            Text(valueToText[ParchmentAttribute.heading.level1]!, style: style),
-      ),
-      PopupMenuItem(
-        value: ParchmentAttribute.heading.level2,
-        height: 32,
-        child:
-            Text(valueToText[ParchmentAttribute.heading.level2]!, style: style),
-      ),
-      PopupMenuItem(
-        value: ParchmentAttribute.heading.level3,
-        height: 32,
-        child:
-            Text(valueToText[ParchmentAttribute.heading.level3]!, style: style),
-      ),
-    ],
+    items: values
+        .map((value) => PopupMenuItem(
+              value: value,
+              height: 32,
+              child: Text(valueToText[value]!, style: style),
+            ))
+        .toList(),
     onSelected: onSelected,
     child: Text(
       valueToText[value as ParchmentAttribute<int>]!,
@@ -570,6 +567,7 @@ class FleatherToolbar extends StatefulWidget implements PreferredSizeWidget {
     List<Widget> leading = const <Widget>[],
     List<Widget> trailing = const <Widget>[],
     bool hideAlignment = false,
+    List<HeadingStyle> headingStyles = HeadingStyle.values,
   }) {
     return FleatherToolbar(key: key, padding: padding, children: [
       ...leading,
@@ -706,7 +704,10 @@ class FleatherToolbar extends StatefulWidget implements PreferredSizeWidget {
 
       Visibility(
           visible: !hideHeadingStyle,
-          child: SelectHeadingStyleButton(controller: controller)),
+          child: SelectHeadingStyleButton(
+            controller: controller,
+            headingStyles: headingStyles,
+          )),
       Visibility(
           visible: !hideHeadingStyle,
           child: VerticalDivider(
@@ -959,5 +960,25 @@ class _FLDropdownButtonState<T> extends State<FLDropdownButton<T>> {
         ),
       ),
     );
+  }
+}
+
+enum HeadingStyle {
+  normalText,
+  heading1,
+  heading2,
+  heading3;
+
+  ParchmentAttribute toParchmentAttribute() {
+    switch (this) {
+      case HeadingStyle.normalText:
+        return ParchmentAttribute.heading.unset;
+      case HeadingStyle.heading1:
+        return ParchmentAttribute.heading.level1;
+      case HeadingStyle.heading2:
+        return ParchmentAttribute.heading.level2;
+      case HeadingStyle.heading3:
+        return ParchmentAttribute.heading.level3;
+    }
   }
 }
