@@ -12,8 +12,7 @@ dependencies:
     sdk: flutter
   collection: ^1.16.0
   quill_delta: ^3.0.0-nullsafety.2
-  parchment:
-    path: ../parchment
+  parchment: ^1.7.0
 
 dev_dependencies:
   flutter_test:
