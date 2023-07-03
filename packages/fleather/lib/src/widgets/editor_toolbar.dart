@@ -360,10 +360,13 @@ class SelectHeadingStyleButton extends StatefulWidget {
 
   final List<HeadingStyle> headingStyles;
 
+  final Map<HeadingStyle, String>? headingStylesText;
+
   const SelectHeadingStyleButton({
     Key? key,
     required this.controller,
     required this.headingStyles,
+    this.headingStylesText,
   }) : super(key: key);
 
   @override
@@ -420,6 +423,8 @@ class _SelectHeadingStyleButtonState extends State<SelectHeadingStyleButton> {
       widget.headingStyles
           .map((style) => style.toParchmentAttribute())
           .toList(),
+      widget.headingStylesText
+          ?.map((key, value) => MapEntry(key.toParchmentAttribute(), value)),
       _selectAttribute,
     );
   }
@@ -429,16 +434,18 @@ Widget _selectHeadingStyleButtonBuilder(
   BuildContext context,
   ParchmentAttribute? value,
   List<ParchmentAttribute> values,
+  Map<ParchmentAttribute, String>? map,
   ValueChanged<ParchmentAttribute?> onSelected,
 ) {
   const style = TextStyle(fontSize: 12);
 
-  final valueToText = {
-    ParchmentAttribute.heading.unset: 'Normal text',
-    ParchmentAttribute.heading.level1: 'Heading 1',
-    ParchmentAttribute.heading.level2: 'Heading 2',
-    ParchmentAttribute.heading.level3: 'Heading 3',
-  };
+  final valueToText = map ??
+      {
+        ParchmentAttribute.heading.unset: 'Normal text',
+        ParchmentAttribute.heading.level1: 'Heading 1',
+        ParchmentAttribute.heading.level2: 'Heading 2',
+        ParchmentAttribute.heading.level3: 'Heading 3',
+      };
 
   return FLDropdownButton<ParchmentAttribute?>(
     highlightElevation: 0,
@@ -568,6 +575,7 @@ class FleatherToolbar extends StatefulWidget implements PreferredSizeWidget {
     List<Widget> trailing = const <Widget>[],
     bool hideAlignment = false,
     List<HeadingStyle> headingStyles = HeadingStyle.values,
+    Map<HeadingStyle, String>? headingStylesText,
   }) {
     return FleatherToolbar(key: key, padding: padding, children: [
       ...leading,
@@ -707,6 +715,7 @@ class FleatherToolbar extends StatefulWidget implements PreferredSizeWidget {
           child: SelectHeadingStyleButton(
             controller: controller,
             headingStyles: headingStyles,
+            headingStylesText: headingStylesText,
           )),
       Visibility(
           visible: !hideHeadingStyle,
