@@ -6,6 +6,37 @@ import 'package:flutter/material.dart';
 
 const double kToolbarHeight = 56.0;
 
+typedef Heading = ParchmentAttribute<int>;
+
+enum HeadingStyle {
+  normalText,
+  heading1,
+  heading2,
+  heading3,
+  heading4,
+  heading5,
+  heading6;
+
+  Heading toHeading() {
+    switch (this) {
+      case HeadingStyle.normalText:
+        return ParchmentAttribute.heading.unset;
+      case HeadingStyle.heading1:
+        return ParchmentAttribute.heading.level1;
+      case HeadingStyle.heading2:
+        return ParchmentAttribute.heading.level2;
+      case HeadingStyle.heading3:
+        return ParchmentAttribute.heading.level3;
+      case HeadingStyle.heading4:
+        return ParchmentAttribute.heading.level4;
+      case HeadingStyle.heading5:
+        return ParchmentAttribute.heading.level5;
+      case HeadingStyle.heading6:
+        return ParchmentAttribute.heading.level6;
+    }
+  }
+}
+
 class InsertEmbedButton extends StatelessWidget {
   final FleatherController controller;
   final IconData icon;
@@ -551,15 +582,28 @@ class _ColorPaletteElement extends StatelessWidget {
 /// Works as a dropdown menu button.
 // TODO: Add "dense" parameter which if set to true changes the button to use an icon instead of text (useful for mobile layouts)
 class SelectHeadingButton extends StatefulWidget {
-  const SelectHeadingButton({super.key, required this.controller});
+  SelectHeadingButton({
+    super.key,
+    required this.controller,
+    List<HeadingStyle>? customHeadingStyles,
+    Map<HeadingStyle, String>? customHeadingStyleToText,
+  })  : customHeadings = customHeadingStyles
+            ?.map((headingStyle) => headingStyle.toHeading())
+            .toList(),
+        customHeadingToText = customHeadingStyleToText
+            ?.map((key, value) => MapEntry(key.toHeading(), value));
 
   final FleatherController controller;
+
+  final List<Heading>? customHeadings;
+
+  final Map<Heading, String>? customHeadingToText;
 
   @override
   State<SelectHeadingButton> createState() => _SelectHeadingButtonState();
 }
 
-final _headingToText = {
+final _defaultHeadingToText = {
   ParchmentAttribute.heading.unset: 'Normal',
   ParchmentAttribute.heading.level1: 'Heading 1',
   ParchmentAttribute.heading.level2: 'Heading 2',
@@ -618,7 +662,11 @@ class _SelectHeadingButtonState extends State<SelectHeadingButton> {
       constraints: BoxConstraints.tightFor(height: buttonHeight),
       child: RawMaterialButton(
         onPressed: _selectHeading,
-        child: Text(_headingToText[current] ?? ''),
+        child: Text(
+          widget.customHeadingToText?[current] ??
+              _defaultHeadingToText[current] ??
+              '',
+        ),
       ),
     );
   }
@@ -628,12 +676,24 @@ class _SelectHeadingButtonState extends State<SelectHeadingButton> {
     final offset =
         renderBox.localToGlobal(Offset.zero) + Offset(0, buttonHeight);
     final themeData = FleatherTheme.of(context)!;
+    final availableHeadings =
+        widget.customHeadings ?? _defaultHeadingToText.keys;
+    final availableHeadingToText =
+        availableHeadings.fold(<Heading, String>{}, (map, heading) {
+      map[heading] = widget.customHeadingToText?[heading] ??
+          _defaultHeadingToText[heading] ??
+          '';
+      return map;
+    });
 
     final selector = Material(
       elevation: 4.0,
       borderRadius: BorderRadius.circular(2),
       color: Theme.of(context).canvasColor,
-      child: _HeadingList(theme: themeData),
+      child: _HeadingList(
+        theme: themeData,
+        availableHeadingToText: availableHeadingToText,
+      ),
     );
 
     final newValue = await Navigator.of(context).push<ParchmentAttribute<int>>(
@@ -660,7 +720,12 @@ class _SelectHeadingButtonState extends State<SelectHeadingButton> {
 class _HeadingList extends StatelessWidget {
   final FleatherThemeData theme;
 
-  const _HeadingList({required this.theme});
+  const _HeadingList({
+    required this.theme,
+    required this.availableHeadingToText,
+  });
+
+  final Map<ParchmentAttribute<int>, String> availableHeadingToText;
 
   @override
   Widget build(BuildContext context) {
@@ -670,7 +735,7 @@ class _HeadingList extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: _headingToText.entries
+          children: availableHeadingToText.entries
               .map((entry) => _listItem(theme, entry.key, entry.value))
               .toList(),
         ),
