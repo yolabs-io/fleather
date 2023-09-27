@@ -587,6 +587,7 @@ class SelectHeadingButton extends StatefulWidget {
     required this.controller,
     List<HeadingStyle>? customHeadingStyles,
     Map<HeadingStyle, String>? customHeadingStyleToText,
+    this.ancestorRenderObject,
   })  : customHeadings = customHeadingStyles
             ?.map((headingStyle) => headingStyle.toHeading())
             .toList(),
@@ -598,6 +599,8 @@ class SelectHeadingButton extends StatefulWidget {
   final List<Heading>? customHeadings;
 
   final Map<Heading, String>? customHeadingToText;
+
+  final RenderObject? ancestorRenderObject;
 
   @override
   State<SelectHeadingButton> createState() => _SelectHeadingButtonState();
@@ -673,8 +676,10 @@ class _SelectHeadingButtonState extends State<SelectHeadingButton> {
 
   Future<void> _selectHeading() async {
     final renderBox = context.findRenderObject() as RenderBox;
-    final offset =
-        renderBox.localToGlobal(Offset.zero) + Offset(0, buttonHeight);
+    final offset = renderBox.localToGlobal(
+      Offset(0, buttonHeight),
+      ancestor: widget.ancestorRenderObject,
+    );
     final themeData = FleatherTheme.of(context)!;
     final availableHeadings =
         widget.customHeadings ?? _defaultHeadingToText.keys;
