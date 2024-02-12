@@ -235,7 +235,7 @@ class _LinkDialogState extends State<_LinkDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _link.isNotEmpty ? _applyLink : null,
+          onPressed: _link.trim().isNotEmpty ? _applyLink : null,
           child: const Text('Apply'),
         ),
       ],
